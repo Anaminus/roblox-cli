@@ -1,4 +1,4 @@
-local version = '1.0'
+local version = '1.0.1'
 
 local pluginSetting = require(script.Parent.pluginSetting)(plugin)
 local settingsWrapper,settings,settingChanged = require(script.Parent.settings)(plugin)
@@ -204,9 +204,7 @@ end
 plugin:Activate(false)
 local Mouse = plugin:GetMouse()
 
-print("CHECK",settings.historySave,pluginSetting.Get('history'))
 local history = settings.historySave and pluginSetting.Get('history') or {}
-print("CHECK@",#history)
 local historyPtr = #history + 1
 local historyMax = settings.historySize
 
