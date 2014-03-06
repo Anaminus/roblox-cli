@@ -7,16 +7,44 @@ local super = setmetatable({},{__index=getfenv(1)})
 local env = setmetatable({},{__index=super})
 local init = pluginSetting.Get('env') or {}
 
-for name,func in pairs(init) do
-	local f,err = loadstring(func,'cmd')
-	if f then
-		setfenv(f,env)
-		local success,err = ypcall(f)
-		if not success then
-			print('init('..name..') error: ' .. err:match('^%[string ".-"%]:.-: (.*)$'))
+-- Initialize variables in the order of their dependencies
+do
+	local function run(name,func)
+		local f,err = loadstring(func,'cmd')
+		if f then
+			setfenv(f,env)
+			local success,err = ypcall(f)
+			if not success then
+				-- If the call requires a missing global, return that global
+				local var = err:match("global '([%w_][%w%d_]*)' %(a nil value%)$")
+				if var then return var end
+				print('init(' .. name .. ') error: ' .. err:match('^%[string ".-"%]:.-: (.*)$'))
+			end
+		else
+			print('init(' .. name .. ') error: ' .. err:match('^%[string ".-"%]:.-: (.*)$'))
 		end
-	else
-		print('init('..name..') error: ' .. err:match('^%[string ".-"%]:.-: (.*)$'))
+	end
+
+	local a = {}
+	for name in pairs(init) do
+		a[#a+1] = name
+	end
+
+	local i = 1
+	while #a > 0 and i <= #a do
+		local n = a[i]
+		-- If the call was successful, or the call depends on some other
+		-- global not in the list, then remove it.
+		if not init[run(n,init[n])] then
+			table.remove(a,i)
+			i = 1
+		else
+			i = i + 1
+		end
+	end
+
+	if #a > 0 then
+		print('init error: could not initialize variables; one or more cyclic dependencies exist')
 	end
 end
 
