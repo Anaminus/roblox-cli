@@ -67,9 +67,9 @@ local styleMethod = {
 	[Enum.EasingStyle.Linear] = function(x)
 		return x
 	end;
-	-- does not match, but very similar
+	-- appears to match perfectly
 	[Enum.EasingStyle.Sine] = function(x)
-		return x^2 + x^2.6 - x^3
+		return 1 - math.cos(x*math.pi/2)
 	end;
 	-- close enough
 	[Enum.EasingStyle.Back] = function(x)
